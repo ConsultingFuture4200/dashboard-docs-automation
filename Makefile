@@ -8,7 +8,7 @@
 #   make build     build the static site into ./site
 #   make all       capture -> draft -> serve
 
-.PHONY: setup tunnel auth capture draft api serve build deploy all
+.PHONY: setup tunnel auth capture draft api serve build deploy all test
 
 setup:
 	npm install
@@ -42,6 +42,9 @@ serve:
 
 build:
 	.venv/bin/mkdocs build
+
+test:
+	python3 -m unittest discover -s tests -t . -v
 
 # Deploy the prebuilt static site/ to Vercel as a plain static site.
 # We deploy site/ (not the repo root) so Vercel does NOT see package.json and
