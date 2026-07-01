@@ -6,7 +6,7 @@
 #   make draft     LLM-draft a markdown page per captured screen
 #   make serve     preview the docs site locally
 #   make build     build the static site into ./site
-#   make all       capture -> draft -> serve
+#   make all       capture -> draft -> api -> serve
 
 .PHONY: setup tunnel auth capture draft api serve build deploy all test
 

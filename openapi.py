@@ -14,6 +14,8 @@ Usage:
 """
 import json
 import re
+import sys
+import urllib.error
 import urllib.request
 from pathlib import Path
 
@@ -22,7 +24,10 @@ DOCS = ROOT / "docs"
 
 
 def load_config():
-    text = (ROOT / "config.yaml").read_text()
+    try:
+        text = (ROOT / "config.yaml").read_text()
+    except OSError:
+        sys.exit("  No config.yaml found. Copy it first: cp config.example.yaml config.yaml")
     # tiny single-line "key: value" reader so we don't need PyYAML here
     m = re.search(r'^openapiUrl:\s*"?([^"\n]+)"?\s*$', text, re.M)
     return m.group(1).strip() if m else "http://localhost:9200/openapi.json"
@@ -95,7 +100,12 @@ def render_operation(method, path, op):
 
 
 def main():
-    spec = fetch(load_config())
+    url = load_config()
+    try:
+        spec = fetch(url)
+    except (urllib.error.URLError, TimeoutError, ValueError) as e:
+        sys.exit(f"  Could not fetch the OpenAPI spec from {url}\n  {e}\n"
+                 f"  Is the app running / the tunnel open? (see config.yaml openapiUrl)")
     info = spec.get("info", {})
     paths = spec.get("paths", {})
 

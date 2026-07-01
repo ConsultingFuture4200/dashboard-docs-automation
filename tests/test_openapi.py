@@ -1,4 +1,7 @@
+import tempfile
 import unittest
+import urllib.error
+from pathlib import Path
 
 import openapi
 
@@ -58,6 +61,30 @@ class TestRenderOperation(unittest.TestCase):
         self.assertIn("**List x**", result)
         self.assertIn("| Code | Description |", result)
         self.assertIn("| 200 | ok |", result)
+
+
+class TestErrorHandling(unittest.TestCase):
+    def test_load_config_missing_file(self):
+        orig_root = openapi.ROOT
+        with tempfile.TemporaryDirectory() as tmp:
+            openapi.ROOT = Path(tmp)
+            try:
+                with self.assertRaises(SystemExit):
+                    openapi.load_config()
+            finally:
+                openapi.ROOT = orig_root
+
+    def test_main_fetch_failure(self):
+        orig_fetch = openapi.fetch
+        orig_load_config = openapi.load_config
+        openapi.fetch = lambda url: (_ for _ in ()).throw(urllib.error.URLError("boom"))
+        openapi.load_config = lambda: "http://example.invalid/openapi.json"
+        try:
+            with self.assertRaises(SystemExit):
+                openapi.main()
+        finally:
+            openapi.fetch = orig_fetch
+            openapi.load_config = orig_load_config
 
 
 if __name__ == "__main__":
