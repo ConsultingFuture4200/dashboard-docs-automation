@@ -134,9 +134,14 @@ def main():
     args = [a for a in sys.argv[1:] if not a.startswith("-")]
     force = "--force" in sys.argv[1:]
 
-    metas = sorted(CAP.glob("*.json"), key=lambda p: p.stem)
+    metas_all = sorted(CAP.glob("*.json"), key=lambda p: p.stem)
+    metas = metas_all
     if args:
-        metas = [p for p in metas if p.stem in args]
+        stems = {p.stem for p in metas_all}
+        unknown = [a for a in args if a not in stems]
+        if unknown:
+            print(f"  Unknown id(s), no capture found, ignored: {', '.join(unknown)}")
+        metas = [p for p in metas_all if p.stem in args]
     if not metas:
         print("  No captures found. Run: npm run capture")
         return
