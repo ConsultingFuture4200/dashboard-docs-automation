@@ -1,112 +1,113 @@
 # Dashboard Docs Automation
 
-Automatically generate end-user documentation for a web dashboard: real
-screenshots + grounded, LLM-drafted explanations for every screen, plus an API
-reference generated from the app's OpenAPI spec. Published as a searchable
-[MkDocs Material](https://squidfunk.github.io/mkdocs-material/) site whose markdown
-doubles as a knowledge base for a support chatbot (RAG).
+Generate end-user documentation for a web dashboard automatically: real screenshots and grounded, LLM-written explanations for every screen, plus an API reference built from the app's OpenAPI spec. The output is a searchable [MkDocs Material](https://squidfunk.github.io/mkdocs-material/) site whose Markdown doubles as a knowledge base for a support chatbot (RAG).
 
-Two automated tracks:
+The mechanical work (capturing every screen, drafting first-pass prose, assembling the site) is automated. You supply a list of screens and a review pass.
+
+## Features
+
+- **Full-screen capture** with [Playwright](https://playwright.dev): screenshot plus the page's real DOM text and control labels, so drafts use your actual button and field names instead of guessing from pixels.
+- **Inner-scroll aware**: expands panels that scroll independently of the page body, freezes persistent side rails, and caps very tall list/log pages.
+- **LLM drafting** against any OpenAI-compatible endpoint (local or hosted), grounded on the captured labels. Vision models read the screenshot directly; text-only models draft from the DOM.
+- **API reference** generated directly from an OpenAPI spec: exact, no LLM, regenerates instantly.
+- **Markdown-first**: the same files render the docs site and feed a chatbot's retrieval index.
+
+## How it works
 
 ```
-SCREENS:  screens.yaml ─► capture.js ─► capture/*.png+json ─► draft.py ─► docs/NNN-*.md ─┐
-          (screen list)   (Playwright)   (shot + DOM)         (LLM, review)               ├─► mkdocs
-API:      /openapi.json ───────────────► openapi.py ───────► docs/900-api-reference.md ──┘  (site + RAG)
-          (live spec)                     (exact, no LLM)
+SCREENS:  screens.yaml -> capture.js -> capture/*.png + *.json -> draft.py -> docs/NNN-*.md --.
+          (screen list)   (Playwright)   (shot + DOM labels)      (LLM)       (review)         |--> mkdocs
+API:      /openapi.json -----------------> openapi.py ----------> docs/900-api-reference.md ---'    (site + RAG)
+          (live spec)                       (exact, no LLM)
 ```
 
-## What's automated vs. manual
+| Stage | Tool | Automated |
+| --- | --- | --- |
+| List screens | `screens.yaml` | Manual (the one file you maintain) |
+| Log in, if needed | `auth.js` | One-time interactive |
+| Screenshot + DOM capture | `capture.js` | Yes |
+| Draft per-screen pages | `draft.py` | Yes (LLM), then you review |
+| API reference | `openapi.py` | Yes, from the spec |
+| Build and search | MkDocs Material | Yes |
 
-| Stage | Tool | Automated? |
-|-------|------|------------|
-| List screens | `screens.yaml` | Manual (one file you maintain) |
-| Log in (if needed) | `auth.js` | One-time interactive |
-| Screenshot + DOM capture | `capture.js` | Fully automated |
-| Draft per-screen prose | `draft.py` | Automated (LLM), then you review |
-| API reference | `openapi.py` | Fully automated from the spec |
-| Build/search site | MkDocs Material | Fully automated |
+## Getting started
 
-The LLM drafts get you ~80%. **Review every page before it feeds a customer-facing
-chatbot** — that human pass is where accuracy comes from.
+### Prerequisites
 
-## Setup
+- [Node.js](https://nodejs.org) 18+
+- [uv](https://docs.astral.sh/uv/) (for the Python tooling and MkDocs)
+- An OpenAI-compatible LLM endpoint (a local server such as vLLM or llama.cpp works)
+
+### Install
 
 ```bash
-make setup                       # Node deps + Playwright Chromium + MkDocs (in a uv venv)
+make setup                          # Node deps + Playwright Chromium + MkDocs (in a uv venv)
 cp config.example.yaml config.yaml
 cp screens.example.yaml screens.yaml
 ```
 
-Then edit `config.yaml` (baseUrl, auth) and list your screens in `screens.yaml`.
+Edit `config.yaml` (set `baseUrl` and whether the app needs auth) and list your screens in `screens.yaml`.
 
-## Run the pipeline
+### Run
 
 ```bash
-# 1. (Optional) if the app needs a login, save a session once:
-make auth
+make auth                           # optional: save a login session if the app requires it
+make capture                        # screenshot + DOM capture of every screen
 
-# 2. Capture every screen (screenshot + DOM text + control labels):
-make capture
-
-# 3. Draft a markdown page per screen with an LLM (see "Model" below):
 OPENAI_BASE_URL=http://localhost:8000/v1 DOCS_MODEL=your-model make draft
 
-# 4. (Optional) generate the API reference from the app's OpenAPI spec:
-make api
-
-# 5. Review docs/*.md, then preview:
-make serve                       # http://127.0.0.1:8000
+make api                            # optional: API reference from the OpenAPI spec
+make serve                          # preview at http://127.0.0.1:8000
 ```
 
-## Pointing draft.py at a model
+> [!TIP]
+> A vision-capable model produces the best pages because it reads the screenshot. With a text-only model, run `DOCS_NO_IMAGE=1 python draft.py` to draft from the captured DOM text and labels alone.
+
+## Configuration
+
+`config.yaml` controls capture and drafting. The most useful keys:
+
+| Key | Purpose |
+| --- | --- |
+| `baseUrl` | Root URL of the running dashboard |
+| `auth` | `true` to require a saved login session, `false` for open apps |
+| `expandScroll` | Grow inner-scrolling panels to full height before shooting |
+| `freezeSelectors` | CSS selectors of side panels to pin so they don't inflate every page |
+| `maxHeightPx` | Cap screenshot height so long lists stay doc-sized |
+| `openapiUrl` | OpenAPI spec URL for the API reference (optional) |
+| `productDescription` | One line injected into the drafting prompt so pages describe the right product |
+
+Screens are defined in `screens.yaml`, one entry per screen with the steps to reach it (`goto`, `click`, `fill`, `waitFor`, and more). Path-routed SPAs usually need a single `goto`; nav-only apps use `click` steps.
+
+## Pointing at a model
 
 `draft.py` talks to any OpenAI-compatible `/chat/completions` endpoint:
 
 ```bash
-export OPENAI_BASE_URL=http://localhost:8000/v1   # your server (vLLM, llama.cpp, OpenAI, ...)
+export OPENAI_BASE_URL=http://localhost:8000/v1   # your server
 export OPENAI_API_KEY=local                        # most local servers ignore this
-export DOCS_MODEL=your-vision-model                # a VISION model gives the best prose
+export DOCS_MODEL=your-vision-model
 python draft.py
 ```
 
-Vision-capable models read the screenshot directly and produce the best pages.
-Text-only model? Run `DOCS_NO_IMAGE=1 python draft.py` to draft from the captured
-DOM text + control labels alone (less accurate, still useful).
-
-## Capture notes
-
-- **Inner-scroll dashboards**: many apps scroll a main panel, not the page body,
-  so `fullPage` clips content. `expandScroll` grows inner panels to full height;
-  `freezeSelectors` pins persistent side panels so they don't inflate every page;
-  `maxHeightPx` caps very tall list/log pages.
-- **SPAs**: path-routed apps reach each screen with a single `goto`. For nav-only
-  routing, use `click` steps in `screens.yaml`.
-
 ## Feeding a support chatbot
 
-The `docs/*.md` files are plain markdown. Point your RAG ingestion at `docs/` so
-the chatbot answers from the exact same source humans read.
+The generated `docs/*.md` files are plain Markdown. Point a RAG pipeline at the `docs/` folder so the chatbot answers from the exact source your users read.
 
-## Privacy
+> [!WARNING]
+> Screenshots and captured DOM can contain real user data (names, emails, list contents). `capture/`, `docs/img/`, generated `docs/NNN-*.md`, and `site/` are gitignored so they are never committed. If you host the site, gate it behind authentication or redact PII first.
 
-Screenshots and captured DOM can contain real user data (names, emails, contents
-of lists). `capture/`, `docs/img/`, generated `docs/NNN-*.md`, and `site/` are
-gitignored so they aren't committed. If you host the site, gate it (auth or
-password protection) or redact PII first.
+## Commands
 
-## Files
+All steps are wrapped in the `Makefile`:
 
-| File | Purpose |
-|------|---------|
-| `config.example.yaml` | Template → copy to `config.yaml` (gitignored) |
-| `screens.example.yaml` | Template → copy to `screens.yaml` (gitignored) |
-| `auth.js` | One-time interactive login → `auth.json` |
-| `capture.js` | Playwright capture of screenshots + DOM text + labels |
-| `draft.py` | LLM drafts one markdown page per screen |
-| `openapi.py` | API reference page from an OpenAPI spec |
-| `mkdocs.yml` | Docs site config (Material theme, auto nav, search) |
-| `Makefile` | `setup / auth / capture / draft / api / serve / build / deploy` |
-
-## License
-
-MIT
+```
+make setup     Node + Python deps + browser
+make auth      one-time login, saves a session
+make capture   screenshot + DOM capture every screen
+make draft     LLM-draft a page per screen
+make api       API reference from the OpenAPI spec
+make serve     preview the docs site
+make build     build the static site into ./site
+make deploy    build and deploy ./site to Vercel
+```
