@@ -14,6 +14,8 @@ Usage:
 """
 import json
 import re
+import sys
+import urllib.error
 import urllib.request
 from pathlib import Path
 
@@ -22,7 +24,10 @@ DOCS = ROOT / "docs"
 
 
 def load_config():
-    text = (ROOT / "config.yaml").read_text()
+    try:
+        text = (ROOT / "config.yaml").read_text()
+    except OSError:
+        sys.exit("  No config.yaml found. Copy it first: cp config.example.yaml config.yaml")
     # tiny single-line "key: value" reader so we don't need PyYAML here
     m = re.search(r'^openapiUrl:\s*"?([^"\n]+)"?\s*$', text, re.M)
     return m.group(1).strip() if m else "http://localhost:9200/openapi.json"
@@ -34,7 +39,7 @@ def fetch(url):
 
 
 def ref_name(schema):
-    """Return a readable type for a schema node (handles $ref, arrays, primitives)."""
+    """Return a readable type for a schema node (handles $ref, arrays, anyOf/oneOf/allOf, primitives)."""
     if not isinstance(schema, dict):
         return ""
     if "$ref" in schema:
@@ -43,6 +48,12 @@ def ref_name(schema):
         return f"{ref_name(schema.get('items', {}))}[]"
     if "anyOf" in schema:
         return " | ".join(filter(None, (ref_name(s) for s in schema["anyOf"]))) or "any"
+    if "oneOf" in schema:
+        return " | ".join(filter(None, (ref_name(s) for s in schema["oneOf"]))) or "any"
+    if "allOf" in schema:
+        # OpenAPI 3.0 commonly wraps a single $ref in allOf to attach a
+        # description/nullability; join the meaningful members with " & ".
+        return " & ".join(filter(None, (ref_name(s) for s in schema["allOf"]))) or "object"
     return schema.get("type", "")
 
 
@@ -95,7 +106,12 @@ def render_operation(method, path, op):
 
 
 def main():
-    spec = fetch(load_config())
+    url = load_config()
+    try:
+        spec = fetch(url)
+    except (urllib.error.URLError, TimeoutError, ValueError) as e:
+        sys.exit(f"  Could not fetch the OpenAPI spec from {url}\n  {e}\n"
+                 f"  Is the app running / the tunnel open? (see config.yaml openapiUrl)")
     info = spec.get("info", {})
     paths = spec.get("paths", {})
 

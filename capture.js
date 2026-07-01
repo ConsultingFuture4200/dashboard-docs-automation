@@ -30,6 +30,11 @@ if (useAuth && !existsSync(new URL(cfg.storageState, root))) {
 
 const only = process.argv.slice(2);
 const todo = only.length ? screens.filter((s) => only.includes(s.id)) : screens;
+if (only.length) {
+  const known = new Set(screens.map((s) => s.id));
+  const unknown = only.filter((id) => !known.has(id));
+  if (unknown.length) console.warn(`  Unknown screen id(s), ignored: ${unknown.join(", ")}`);
+}
 if (!todo.length) {
   console.error("  No matching screens.");
   process.exit(1);
