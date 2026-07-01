@@ -37,6 +37,23 @@ draft:
 api:
 	python openapi.py
 
+# --- Accuracy audits (compare docs to the ground truth captured at collection) ---
+# Layer 1: deterministic element cross-check (no LLM, no app access).
+audit:
+	python audit.py
+
+# Layer 3: semantic LLM judge (uses the same endpoint as draft).
+judge:
+	python judge.py
+
+# Layer 2: live verification of navigation + documented elements (needs the app;
+# open `make tunnel` first). Runs audit first so it has the documented-element list.
+verify: audit
+	npm run verify
+
+# Full audit stack. Layer 2 (verify) needs the tunnel open.
+audit-all: audit judge verify
+
 serve:
 	.venv/bin/mkdocs serve
 

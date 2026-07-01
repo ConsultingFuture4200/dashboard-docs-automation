@@ -28,3 +28,8 @@ docs/[0-9]*-*.md
 litho.docs/
 .litho/
 litho.toml
+.deepwiki-mkdocs.yml
+.deepwiki-site/
+
+# Audit output (captured DOM can contain real user data)
+audit/

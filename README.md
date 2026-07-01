@@ -62,6 +62,32 @@ make serve                                                        # preview at h
 </details>
 
 <details>
+<summary>Auditing accuracy</summary>
+
+Because the drafts are LLM-written, the pipeline includes a three-layer audit that
+compares the docs against the ground truth captured at collection time. Each layer
+catches a different failure mode:
+
+| Layer | Command | Catches | Needs |
+|-------|---------|---------|-------|
+| **1. Cross-check** | `make audit` | Hallucinated elements, coverage gaps | Nothing (deterministic) |
+| **2. Live verify** | `make verify` | Broken navigation, drift vs the running app | App reachable |
+| **3. Semantic judge** | `make judge` | Wrong descriptions, unsupported claims | An LLM endpoint |
+
+```bash
+make audit        # deterministic: docs vs captured DOM labels -> audit/report.md
+make judge        # LLM judge: docs vs ground truth -> audit/semantic-report.md
+make verify       # live: re-run screen steps, check elements -> audit/live-report.md
+make audit-all    # all three (verify needs the tunnel open)
+```
+
+> [!WARNING]
+> Audit reports are written under `audit/`, which is gitignored because captured
+> DOM can contain real user data.
+
+</details>
+
+<details>
 <summary>Architecture</summary>
 
 ```mermaid
@@ -115,6 +141,9 @@ make auth      one-time login, saves a session
 make capture   screenshot + DOM capture every screen
 make draft     LLM-draft a page per screen
 make api       API reference from the OpenAPI spec
+make audit     Layer 1 accuracy audit (deterministic)
+make judge     Layer 3 accuracy audit (LLM judge)
+make verify    Layer 2 accuracy audit (live app)
 make serve     preview the docs site
 make build     build the static site into ./site
 make deploy    build and deploy ./site to Vercel

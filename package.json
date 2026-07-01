@@ -6,7 +6,8 @@
   "type": "module",
   "scripts": {
     "auth": "node auth.js",
-    "capture": "node capture.js"
+    "capture": "node capture.js",
+    "verify": "node verify.js"
   },
   "dependencies": {
     "playwright": "^1.49.0",

@@ -13,6 +13,7 @@
 import { chromium } from "playwright";
 import { readFileSync, writeFileSync, mkdirSync, existsSync } from "node:fs";
 import { fileURLToPath } from "node:url";
+import { createHash } from "node:crypto";
 import { parse } from "yaml";
 
 const root = new URL("./", import.meta.url);
@@ -163,10 +164,14 @@ for (const s of todo) {
     const text = (await page.evaluate(() => document.body.innerText || "")).replace(/\n{3,}/g, "\n\n").trim();
     const controls = await extractControls(page);
 
+    // Structural fingerprint of the screen (sorted controls only, not volatile
+    // text/data), so a later capture can detect UI drift deterministically.
+    const fingerprint = createHash("sha256").update([...controls].sort().join("\n")).digest("hex").slice(0, 16);
+
     writeFileSync(
       new URL(`capture/${s.id}.json`, root),
       JSON.stringify(
-        { id: s.id, name: s.name, order: s.order ?? 999, note: s.note ?? "", url: page.url(), text, controls },
+        { id: s.id, name: s.name, order: s.order ?? 999, note: s.note ?? "", url: page.url(), fingerprint, text, controls },
         null,
         2
       )
