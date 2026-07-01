@@ -39,7 +39,7 @@ def fetch(url):
 
 
 def ref_name(schema):
-    """Return a readable type for a schema node (handles $ref, arrays, primitives)."""
+    """Return a readable type for a schema node (handles $ref, arrays, anyOf/oneOf/allOf, primitives)."""
     if not isinstance(schema, dict):
         return ""
     if "$ref" in schema:
@@ -48,6 +48,12 @@ def ref_name(schema):
         return f"{ref_name(schema.get('items', {}))}[]"
     if "anyOf" in schema:
         return " | ".join(filter(None, (ref_name(s) for s in schema["anyOf"]))) or "any"
+    if "oneOf" in schema:
+        return " | ".join(filter(None, (ref_name(s) for s in schema["oneOf"]))) or "any"
+    if "allOf" in schema:
+        # OpenAPI 3.0 commonly wraps a single $ref in allOf to attach a
+        # description/nullability; join the meaningful members with " & ".
+        return " & ".join(filter(None, (ref_name(s) for s in schema["allOf"]))) or "object"
     return schema.get("type", "")
 
 

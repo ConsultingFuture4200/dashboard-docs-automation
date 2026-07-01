@@ -32,6 +32,30 @@ class TestRefName(unittest.TestCase):
     def test_not_a_dict(self):
         self.assertEqual(openapi.ref_name("not a dict"), "")
 
+    def test_all_of_single(self):
+        self.assertEqual(
+            openapi.ref_name({"allOf": [{"$ref": "#/c/s/Pet"}]}), "Pet"
+        )
+
+    def test_all_of_multiple(self):
+        self.assertEqual(
+            openapi.ref_name(
+                {"allOf": [{"$ref": "#/c/s/Pet"}, {"$ref": "#/c/s/Timestamped"}]}
+            ),
+            "Pet & Timestamped",
+        )
+
+    def test_one_of(self):
+        self.assertEqual(
+            openapi.ref_name(
+                {"oneOf": [{"$ref": "#/c/s/Cat"}, {"$ref": "#/c/s/Dog"}]}
+            ),
+            "Cat | Dog",
+        )
+
+    def test_all_of_empty(self):
+        self.assertEqual(openapi.ref_name({"allOf": []}), "object")
+
 
 class TestGroupKey(unittest.TestCase):
     def test_api_prefixed(self):
