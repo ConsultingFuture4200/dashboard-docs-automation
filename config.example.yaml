@@ -1,0 +1,52 @@
+# Copy this to config.yaml and edit for your dashboard:  cp config.example.yaml config.yaml
+# config.yaml is gitignored so your real URLs/hosts never get committed.
+
+# Base URL of the running dashboard. Screen `goto` paths resolve against this.
+# If the app is only reachable on localhost/another host, put it behind an SSH
+# tunnel first and point baseUrl at the local forwarded port, e.g.:
+#     ssh -N -L 9200:127.0.0.1:9200 user@host
+#     baseUrl: "http://localhost:9200"
+baseUrl: "https://your-dashboard.example.com"
+
+# Set true if the app needs a login: run `npm run auth` once to save a session.
+# Set false if the app is open or injects its own token on load.
+auth: true
+
+# Viewport for screenshots. 1440x900 looks good in docs; bump width for wide tables.
+viewport:
+  width: 1440
+  height: 900
+
+# Capture full scrollable page (true) or just the viewport (false).
+fullPage: true
+
+# Many dashboards scroll an inner main panel rather than the page body, so plain
+# fullPage clips content. With expandScroll on, capture.js grows inner scroll
+# containers to their full height before shooting.
+expandScroll: true
+
+# Elements to "freeze" at their current height while expanding, so a persistent
+# side panel (e.g. a chat rail) doesn't inflate every screen. CSS selectors.
+freezeSelectors:
+  - "aside"
+
+# Cap screenshot height (px). List/log screens can scroll to tens of thousands of
+# px; a cap keeps images doc-sized and small enough for a vision model, while
+# still showing header + controls + first rows. 0 = no cap.
+maxHeightPx: 4000
+
+# Milliseconds to wait after a screen loads, before screenshotting. Give SPAs
+# time to fetch and render. Raise if shots look half-loaded.
+settleMs: 1500
+
+# Saved session path (only used if auth is true; created by `npm run auth`).
+storageState: "auth.json"
+
+# Optional: OpenAPI spec URL. If set, `python openapi.py` generates an API
+# reference page from it. Remove/leave blank if the app has no OpenAPI spec.
+openapiUrl: "https://your-dashboard.example.com/openapi.json"
+
+# One-line product description injected into the LLM drafting prompt so pages
+# describe the RIGHT product. Keep it accurate — a wrong description makes the
+# model invent features.
+productDescription: "your product, a one-line description of what the dashboard does"

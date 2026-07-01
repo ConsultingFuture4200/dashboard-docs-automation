@@ -1,0 +1,40 @@
+site_name: Dashboard Guide
+site_description: How to use every screen of the dashboard, plus the API reference.
+
+theme:
+  name: material
+  features:
+    - navigation.instant
+    - navigation.tracking
+    - navigation.sections
+    - content.code.copy
+    - search.highlight
+    - search.suggest
+  palette:
+    - scheme: default
+      primary: indigo
+      toggle:
+        icon: material/brightness-7
+        name: Dark mode
+    - scheme: slate
+      primary: indigo
+      toggle:
+        icon: material/brightness-4
+        name: Light mode
+
+plugins:
+  - search
+  # No explicit nav: block, so MkDocs auto-builds the nav from docs/ in filename
+  # order. Files are prefixed with zero-padded order numbers (010-, 020-) so they
+  # sort correctly; each page's displayed title comes from its first H1 heading.
+
+markdown_extensions:
+  - admonition
+  - tables
+  - attr_list
+  - md_in_html
+  - toc:
+      permalink: true
+
+# Screenshots live in capture/ next to docs/; this makes them servable.
+extra_css: []

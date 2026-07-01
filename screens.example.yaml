@@ -1,0 +1,44 @@
+# Copy this to screens.yaml and list your real screens:  cp screens.example.yaml screens.yaml
+# screens.yaml is gitignored so app-specific routes aren't committed.
+#
+# This file is your discovery step: one entry per screen you want documented.
+# Give each an id, name, order (controls doc nav order), a short `note` (seed
+# context for the LLM), and the `steps` to reach + reveal it.
+#
+# Step types capture.js understands:
+#   - goto: "/path"                              navigate (relative to baseUrl)
+#   - click: "css or text=Label"                 click an element
+#   - fill: { selector: "...", value: "..." }    type into a field
+#   - hover: "selector"                          hover (tooltips / menus)
+#   - waitFor: "selector"                        wait until visible
+#   - press: "Escape"                            keyboard key
+#   - wait: 500                                  wait N milliseconds
+#
+# Tip: capture empty states, modals, AND error states — those are what users ask
+# a support chatbot about. Path-routed SPAs can usually reach a screen with a
+# single `goto`; otherwise click through the nav.
+
+- id: home
+  name: "Home"
+  order: 10
+  note: "Main landing screen after load; overview of activity."
+  steps:
+    - goto: "/"
+    - waitFor: "#root"
+
+- id: settings
+  name: "Settings"
+  order: 20
+  note: "Settings hub for preferences and configuration."
+  steps:
+    - goto: "/settings"
+    - waitFor: "#root"
+
+- id: new-item-modal
+  name: "New Item Modal"
+  order: 21
+  note: "Example of reaching a modal via a click-path."
+  steps:
+    - goto: "/items"
+    - click: "text=New Item"
+    - waitFor: "[role=dialog]"

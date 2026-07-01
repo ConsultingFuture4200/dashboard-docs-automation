@@ -1,0 +1,25 @@
+# Dependencies / build
+node_modules/
+.venv/
+site/
+__pycache__/
+*.pyc
+.vercel/
+
+# Saved login session (may contain tokens)
+auth.json
+
+# Your app-specific config (copy from the .example files) — keeps infra/URLs out of git
+config.yaml
+screens.yaml
+
+# Captured artifacts (screenshots + DOM dumps can contain real user data / PII)
+capture/*.png
+capture/*.json
+docs/img/
+
+# Generated per-screen doc pages and API reference (regenerate from the live app)
+docs/[0-9]*-*.md
+
+# Logs
+*.log

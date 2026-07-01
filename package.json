@@ -1,0 +1,15 @@
+{
+  "name": "dashboard-docs-automation",
+  "version": "0.1.0",
+  "private": true,
+  "description": "Automated screenshot + DOM capture for generating dashboard documentation",
+  "type": "module",
+  "scripts": {
+    "auth": "node auth.js",
+    "capture": "node capture.js"
+  },
+  "dependencies": {
+    "playwright": "^1.49.0",
+    "yaml": "^2.6.0"
+  }
+}
