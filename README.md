@@ -16,6 +16,9 @@ Captures every screen of a dashboard (screenshot + real DOM labels), drafts a gr
 
 ## Quick Start
 
+> [!TIP]
+> First time here? Follow **[QUICKSTART.md](QUICKSTART.md)** — a step-by-step walkthrough from clone to your first generated page, with "what you should see" checkpoints and per-provider LLM setup (OpenAI, Ollama, vLLM/llama.cpp).
+
 > [!IMPORTANT]
 > Requires Node.js 18+, [uv](https://docs.astral.sh/uv/), and an OpenAI-compatible LLM endpoint (a local server such as vLLM or llama.cpp works).
 

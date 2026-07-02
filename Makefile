@@ -8,13 +8,29 @@
 #   make build     build the static site into ./site
 #   make all       capture -> draft -> api -> serve
 
-.PHONY: setup doctor tunnel auth capture draft api serve build deploy all test
+.PHONY: setup init doctor tunnel auth capture draft api serve build deploy all test
 
 setup:
 	npm install
 	npx playwright install chromium
 	uv venv .venv
 	uv pip install -p .venv/bin/python -r requirements.txt
+
+# Create config.yaml + screens.yaml from the .example templates (skips existing).
+init:
+	@if [ -f config.yaml ]; then \
+		echo "  config.yaml already exists — left untouched"; \
+	else \
+		cp config.example.yaml config.yaml; \
+		echo "  created config.yaml — edit baseUrl, auth, productDescription"; \
+	fi
+	@if [ -f screens.yaml ]; then \
+		echo "  screens.yaml already exists — left untouched"; \
+	else \
+		cp screens.example.yaml screens.yaml; \
+		echo "  created screens.yaml — list your real screens (see QUICKSTART.md)"; \
+	fi
+	@echo "  then run: make doctor"
 
 # Preflight: check tools, config, and connectivity before running the pipeline.
 doctor:
