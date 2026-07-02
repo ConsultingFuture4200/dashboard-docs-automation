@@ -64,9 +64,9 @@ concrete, and self-contained.
 
 Screen name: {name}
 Seed note: {note}
-URL: {url}
 
-EXACT visible control labels (use these verbatim; do NOT invent controls):
+Visible controls, given as "label" (role). Use only the quoted label text when \
+referring to a control; the role is context, not part of the name:
 {controls}
 
 Visible page text:
@@ -80,11 +80,15 @@ Write a markdown doc page with EXACTLY these sections and headings:
 One or two sentences on the purpose of this screen.
 
 ## How to get here
-The navigation path to reach this screen.
+Describe the in-app navigation to reach this screen — which sidebar or menu items \
+a user clicks (e.g. "Open Settings, then Google"). Do NOT write a URL, web address, \
+host, or port; users navigate by clicking, not by typing an address.
 
 ## Key elements
 A markdown table with columns | Element | What it does |. One row per important \
-button, field, tab, or control, using the exact labels above.
+button, field, tab, or control. In the Element column put ONLY the control's \
+visible label text (the words a user sees) — never a role prefix like "button:" \
+or "link:".
 
 ## Common tasks
 Numbered step-by-step instructions for the 2-4 most common things a user does here.
@@ -100,13 +104,23 @@ Rules:
 """
 
 
+def format_control(c: str) -> str:
+    """Present a captured control as its visible label with the role as a
+    parenthetical, e.g. 'button: Restart Gateway' -> '"Restart Gateway" (button)'.
+    Keeps role context for the model without the 'role:' prefix that leaked into
+    the docs verbatim."""
+    if ":" in c:
+        role, label = c.split(":", 1)
+        return f'"{label.strip()}" ({role.strip()})'
+    return f'"{c.strip()}"'
+
+
 def build_messages(meta: dict, img_b64: str | None):
-    controls = "\n".join(f"- {c}" for c in meta.get("controls", [])) or "(none detected)"
+    controls = "\n".join(f"- {format_control(c)}" for c in meta.get("controls", [])) or "(none detected)"
     prompt = TEMPLATE.format(
         product=PRODUCT,
         name=meta["name"],
         note=meta.get("note", ""),
-        url=meta.get("url", ""),
         controls=controls,
         text=meta.get("text", "")[:6000],
     )

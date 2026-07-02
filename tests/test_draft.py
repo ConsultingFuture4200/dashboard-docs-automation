@@ -17,7 +17,10 @@ class TestBuildMessages(unittest.TestCase):
         self.assertEqual(result[0]["role"], "user")
         self.assertEqual(result[0]["content"][0]["type"], "text")
         text = result[0]["content"][0]["text"]
-        self.assertIn("button: Save", text)
+        # Controls are reformatted as "label" (role) so the raw "role: label"
+        # prefix no longer leaks into the drafted docs.
+        self.assertIn('"Save" (button)', text)
+        self.assertNotIn("- button: Save", text)
         self.assertIn("hello", text)
         self.assertEqual(len(result[0]["content"]), 1)
 
