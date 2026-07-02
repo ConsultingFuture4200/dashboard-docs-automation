@@ -143,6 +143,7 @@ def main():
         return
 
     DOCS.mkdir(exist_ok=True)
+    failed = 0
     for mp in metas:
         meta = json.loads(mp.read_text())
         order = str(meta.get("order", 999)).zfill(3)
@@ -160,6 +161,7 @@ def main():
         except Exception as e:
             print(f"FAILED: {e}")
             print(f"    re-run just this screen: python draft.py {meta['id']}")
+            failed += 1
             continue
 
         # Copy the screenshot into docs/img/ so MkDocs serves it (it only serves
@@ -172,6 +174,9 @@ def main():
         out.write_text(page)
         print(f"wrote {out.name}")
 
+    if failed:
+        print(f"\n  {failed}/{len(metas)} screens FAILED to draft (see FAILED lines above).\n", file=sys.stderr)
+        sys.exit(1)
     print("\n  Review the drafts in docs/, then: mkdocs serve\n")
 
 
