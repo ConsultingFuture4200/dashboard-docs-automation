@@ -75,6 +75,24 @@ class TestReadKey(unittest.TestCase):
         with tempfile.TemporaryDirectory() as tmp:
             self.assertEqual(configcheck.read_key("baseUrl", Path(tmp)), "")
 
+    def test_empty_quoted_value_returns_empty(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            root = Path(tmp)
+            (root / "config.yaml").write_text('openapiUrl: ""\n')
+            self.assertEqual(configcheck.read_key("openapiUrl", root), "")
+
+    def test_bare_key_does_not_leak_next_line(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            root = Path(tmp)
+            (root / "config.yaml").write_text("openapiUrl:\n# a comment line\n")
+            self.assertEqual(configcheck.read_key("openapiUrl", root), "")
+
+    def test_reads_unquoted_value(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            root = Path(tmp)
+            (root / "config.yaml").write_text("auth: true\n")
+            self.assertEqual(configcheck.read_key("auth", root), "true")
+
 
 if __name__ == "__main__":
     unittest.main()

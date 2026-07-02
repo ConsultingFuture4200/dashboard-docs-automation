@@ -29,7 +29,9 @@ def read_key(key: str, root: Path = ROOT) -> str:
         text = (root / "config.yaml").read_text()
     except OSError:
         return ""
-    m = re.search(rf'^{key}:\s*"?(.+?)"?\s*$', text, re.M)
+    # [ \t]* (not \s*) so a bare "key:" line never matches across the newline
+    # and returns the next line; [^"\n]* allows an empty value ("" or nothing).
+    m = re.search(rf'^{key}:[ \t]*"?([^"\n]*)"?[ \t]*$', text, re.M)
     return m.group(1).strip() if m else ""
 
 

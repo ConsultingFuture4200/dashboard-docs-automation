@@ -14,7 +14,7 @@ abstractions.
 
 ```bash
 make test                                      # Python unit tests (no network needed)
-node --check capture.js verify.js auth.js config-check.js   # syntax-check touched JS
+git ls-files '*.js' | xargs -r -n1 node --check   # syntax-check every JS file (same as CI)
 ```
 
 Tests must not require the dashboard, a tunnel, or an LLM endpoint.

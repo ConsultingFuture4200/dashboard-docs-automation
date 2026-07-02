@@ -180,7 +180,9 @@ make api
 ```
 
 **You should see:** `docs/900-api-reference.md` generated from your OpenAPI
-spec (skips cleanly if `openapiUrl` isn't set).
+spec. If your app has no OpenAPI spec, leave `openapiUrl` blank in
+`config.yaml` — `make api` then prints `openapiUrl is not set … skipping` and
+exits cleanly.
 
 ## 8. Serve
 

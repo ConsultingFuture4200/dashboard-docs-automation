@@ -51,20 +51,20 @@ capture:
 	npm run capture
 
 draft:
-	python draft.py
+	python3 draft.py
 
 # Auto-generate the API reference page from the live OpenAPI spec.
 api:
-	python openapi.py
+	python3 openapi.py
 
 # --- Accuracy audits (compare docs to the ground truth captured at collection) ---
 # Layer 1: deterministic element cross-check (no LLM, no app access).
 audit:
-	python audit.py
+	python3 audit.py
 
 # Layer 3: semantic LLM judge (uses the same endpoint as draft).
 judge:
-	python judge.py
+	python3 judge.py
 
 # Layer 2: live verification of navigation + documented elements (needs the app;
 # open `make tunnel` first). Runs audit first so it has the documented-element list.

@@ -4,8 +4,9 @@ Generate an API reference page for the docs site directly from the app's live
 OpenAPI spec. No screenshots, no LLM — the spec IS the source of truth, so this
 is exact and regenerates instantly.
 
-Reads `openapiUrl` from config.yaml, groups the operations by URL prefix (works
-even when the spec is untagged), and writes:
+Reads `openapiUrl` from config.yaml (exits cleanly with a skip message if it's
+unset), groups the operations by URL prefix (works even when the spec is
+untagged), and writes:
 
     docs/900-api-reference.md
 
@@ -25,9 +26,12 @@ DOCS = ROOT / "docs"
 
 
 def load_config():
+    """Return the openapiUrl, or "" if it's unset/blank/still the placeholder."""
     configcheck.require_config(ROOT)
     url = configcheck.read_key("openapiUrl", ROOT)
-    return url or "http://localhost:9200/openapi.json"
+    if not url or "your-dashboard.example.com" in url:
+        return ""
+    return url
 
 
 def fetch(url):
@@ -104,6 +108,9 @@ def render_operation(method, path, op):
 
 def main():
     url = load_config()
+    if not url:
+        print("  openapiUrl is not set in config.yaml — skipping the API reference page.")
+        return
     try:
         spec = fetch(url)
     except (urllib.error.URLError, TimeoutError, ValueError) as e:
