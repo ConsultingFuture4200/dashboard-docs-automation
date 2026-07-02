@@ -13,24 +13,21 @@ Usage:
     python openapi.py
 """
 import json
-import re
 import sys
 import urllib.error
 import urllib.request
 from pathlib import Path
+
+import configcheck
 
 ROOT = Path(__file__).parent
 DOCS = ROOT / "docs"
 
 
 def load_config():
-    try:
-        text = (ROOT / "config.yaml").read_text()
-    except OSError:
-        sys.exit("  No config.yaml found. Copy it first: cp config.example.yaml config.yaml")
-    # tiny single-line "key: value" reader so we don't need PyYAML here
-    m = re.search(r'^openapiUrl:\s*"?([^"\n]+)"?\s*$', text, re.M)
-    return m.group(1).strip() if m else "http://localhost:9200/openapi.json"
+    configcheck.require_config(ROOT)
+    url = configcheck.read_key("openapiUrl", ROOT)
+    return url or "http://localhost:9200/openapi.json"
 
 
 def fetch(url):

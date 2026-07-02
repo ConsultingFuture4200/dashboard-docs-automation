@@ -24,8 +24,9 @@ import json
 import os
 import re
 import sys
-import urllib.request
 from pathlib import Path
+
+import llm
 
 ROOT = Path(__file__).parent
 CAP = ROOT / "capture"
@@ -74,14 +75,7 @@ DRAFTED DOC PAGE:
 
 
 def call_model(messages):
-    body = json.dumps({"model": MODEL, "messages": messages, "temperature": 0.1}).encode()
-    req = urllib.request.Request(
-        f"{BASE_URL}/chat/completions",
-        data=body,
-        headers={"Content-Type": "application/json", "Authorization": f"Bearer {API_KEY}"},
-    )
-    with urllib.request.urlopen(req, timeout=600) as resp:
-        return json.loads(resp.read())["choices"][0]["message"]["content"]
+    return llm.chat(BASE_URL, API_KEY, MODEL, messages, temperature=0.1)
 
 
 def extract_json(s: str):
@@ -141,6 +135,7 @@ def main():
             v = judge_one(meta, page.read_text())
         except Exception as e:
             print(f"FAILED: {e}")
+            print(f"    re-run just this screen: python judge.py {meta['id']}")
             continue
         (OUT / f"{meta['id']}.json").write_text(json.dumps(v, indent=2))
         n = len(v.get("unsupported_claims", [])) + len(v.get("misleading_or_wrong", []))

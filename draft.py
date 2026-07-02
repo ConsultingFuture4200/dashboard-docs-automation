@@ -29,29 +29,17 @@ Notes:
 import base64
 import json
 import os
-import re
 import sys
-import urllib.request
 from pathlib import Path
+
+import configcheck
+import llm
 
 ROOT = Path(__file__).parent
 CAP = ROOT / "capture"
 DOCS = ROOT / "docs"
 
-
-def product_description():
-    """Read the product description from config.yaml (one-line value)."""
-    try:
-        text = (ROOT / "config.yaml").read_text()
-        m = re.search(r'^productDescription:\s*"?(.+?)"?\s*$', text, re.M)
-        if m:
-            return m.group(1).strip()
-    except OSError:
-        pass
-    return "this product's dashboard"
-
-
-PRODUCT = product_description()
+PRODUCT = configcheck.read_key("productDescription") or "this product's dashboard"
 
 BASE_URL = os.environ.get("OPENAI_BASE_URL", "http://localhost:8000/v1").rstrip("/")
 API_KEY = os.environ.get("OPENAI_API_KEY", "local")
@@ -134,18 +122,11 @@ def build_messages(meta: dict, img_b64: str | None):
 
 
 def call_model(messages) -> str:
-    body = json.dumps({"model": MODEL, "messages": messages, "temperature": 0.2}).encode()
-    req = urllib.request.Request(
-        f"{BASE_URL}/chat/completions",
-        data=body,
-        headers={"Content-Type": "application/json", "Authorization": f"Bearer {API_KEY}"},
-    )
-    with urllib.request.urlopen(req, timeout=600) as resp:
-        data = json.loads(resp.read())
-    return data["choices"][0]["message"]["content"].strip()
+    return llm.chat(BASE_URL, API_KEY, MODEL, messages, temperature=0.2).strip()
 
 
 def main():
+    configcheck.require_config()
     args = [a for a in sys.argv[1:] if not a.startswith("-")]
     force = "--force" in sys.argv[1:]
 
@@ -178,6 +159,7 @@ def main():
             md = call_model(build_messages(meta, img_b64))
         except Exception as e:
             print(f"FAILED: {e}")
+            print(f"    re-run just this screen: python draft.py {meta['id']}")
             continue
 
         # Copy the screenshot into docs/img/ so MkDocs serves it (it only serves

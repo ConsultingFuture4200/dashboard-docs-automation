@@ -25,6 +25,7 @@ cd dashboard-docs-automation
 make setup                              # Node + Playwright Chromium + MkDocs (uv venv)
 cp config.example.yaml config.yaml      # then set baseUrl + auth
 cp screens.example.yaml screens.yaml    # then list your screens
+make doctor                             # preflight: tools, config, connectivity
 ```
 
 ```bash
@@ -137,6 +138,7 @@ Screens are listed in `screens.yaml`, one entry per screen with the steps to rea
 
 ```
 make setup     Node + Python deps + browser
+make doctor    preflight check: tools, config, connectivity
 make auth      one-time login, saves a session
 make capture   screenshot + DOM capture every screen
 make draft     LLM-draft a page per screen

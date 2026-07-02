@@ -15,9 +15,10 @@ import { readFileSync, writeFileSync, mkdirSync, existsSync } from "node:fs";
 import { fileURLToPath } from "node:url";
 import { createHash } from "node:crypto";
 import { parse } from "yaml";
+import { loadConfig } from "./config-check.js";
 
 const root = new URL("./", import.meta.url);
-const cfg = parse(readFileSync(new URL("config.yaml", root), "utf8"));
+const cfg = loadConfig(root);
 const screens = parse(readFileSync(new URL("screens.yaml", root), "utf8"));
 
 // Auth is optional. With `auth: true` we require a saved session from `npm run
@@ -151,6 +152,19 @@ for (const s of todo) {
     process.stdout.write(`  ${s.id} ... `);
     for (const step of s.steps) await runStep(page, step);
     await page.waitForTimeout(cfg.settleMs);
+
+    // Detect being bounced to a login page (expired session): the URL smells
+    // like auth, or the page rendered essentially nothing. Fail this capture
+    // loudly instead of silently saving a login-page screenshot.
+    const landed = page.url();
+    const bodyChars = await page.evaluate(() => (document.body?.innerText || "").trim().length);
+    if (/login|signin|auth/i.test(landed)) {
+      throw new Error(`landed on ${landed} — session expired? Run: make auth, then: npm run capture -- ${s.id}`);
+    }
+    if (bodyChars < 30) {
+      throw new Error(`page body is near-empty (${bodyChars} chars) at ${landed} — session expired or app not loaded? Run: make auth, then: npm run capture -- ${s.id}`);
+    }
+
     if (cfg.expandScroll) await expandScroll(page, cfg.freezeSelectors, cfg.maxHeightPx);
 
     const pngPath = fileURLToPath(new URL(`capture/${s.id}.png`, root));

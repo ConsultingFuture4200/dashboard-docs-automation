@@ -20,9 +20,10 @@
 import { chromium } from "playwright";
 import { readFileSync, writeFileSync, mkdirSync, existsSync } from "node:fs";
 import { parse } from "yaml";
+import { loadConfig } from "./config-check.js";
 
 const root = new URL("./", import.meta.url);
-const cfg = parse(readFileSync(new URL("config.yaml", root), "utf8"));
+const cfg = loadConfig(root);
 const screens = parse(readFileSync(new URL("screens.yaml", root), "utf8"));
 
 const auditPath = new URL("audit/audit.json", root);

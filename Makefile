@@ -8,13 +8,17 @@
 #   make build     build the static site into ./site
 #   make all       capture -> draft -> api -> serve
 
-.PHONY: setup tunnel auth capture draft api serve build deploy all test
+.PHONY: setup doctor tunnel auth capture draft api serve build deploy all test
 
 setup:
 	npm install
 	npx playwright install chromium
 	uv venv .venv
 	uv pip install -p .venv/bin/python -r requirements.txt
+
+# Preflight: check tools, config, and connectivity before running the pipeline.
+doctor:
+	python3 doctor.py
 
 # Open an SSH local-forward if your dashboard is only reachable on a remote host.
 # Edit HOST/PORT for your setup, then set baseUrl to the forwarded localhost port.
