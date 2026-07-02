@@ -3,6 +3,8 @@
 > Turn any web dashboard into a screenshot-rich documentation site, automatically.
 
 <p align="center">
+  <!-- Version badge is static: keep in sync with the VERSION file on release. -->
+  <a href="https://github.com/ConsultingFuture4200/dashboard-docs-automation/releases"><img src="https://img.shields.io/badge/version-0.1.0-blue?style=flat-square" alt="Version"></a>
   <a href="LICENSE"><img src="https://img.shields.io/badge/license-MIT-blue?style=flat-square" alt="License"></a>
   <img src="https://img.shields.io/badge/Playwright-2EAD33?style=flat-square&logo=playwright&logoColor=white" alt="Playwright">
   <img src="https://img.shields.io/badge/Python-3776AB?style=flat-square&logo=python&logoColor=white" alt="Python">
@@ -155,6 +157,10 @@ make deploy    build and deploy ./site to Vercel
 ```
 
 </details>
+
+## Releases
+
+Tagged versions live on the [Releases page](https://github.com/ConsultingFuture4200/dashboard-docs-automation/releases); see [CHANGELOG.md](CHANGELOG.md) for what changed in each.
 
 ## License
 

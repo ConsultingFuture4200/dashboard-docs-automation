@@ -53,6 +53,8 @@ def reachable(url):
 
 
 def main():
+    print(f"  dashboard-docs-automation v{(ROOT / 'VERSION').read_text().strip()}")
+
     # node
     r = run(["node", "--version"])
     if r and r.returncode == 0:
