@@ -134,7 +134,7 @@ Two tracks feed one site: **screens** go through capture and LLM drafting; the *
 Screens are listed in `screens.yaml`, one entry per screen with the steps to reach it (`goto`, `click`, `fill`, `waitFor`, `hover`, `press`, `wait`). Path-routed SPAs usually need a single `goto`.
 
 > [!WARNING]
-> Screenshots and captured DOM can contain real user data. `capture/`, `docs/img/`, generated `docs/NNN-*.md`, and `site/` are gitignored so they are never committed. If you host the site, gate it behind authentication or redact PII first.
+> Screenshots and captured DOM can contain real user data. `capture/`, `docs/img/`, generated `docs/NNN-*.md`, and `site/` are gitignored so they are never committed. If you host the site, gate it behind authentication or redact PII first — note that Vercel's free (Hobby) plan **cannot** protect the production domain, so `make deploy` there makes the site public (the target requires `DEPLOY_PUBLIC=1` for this reason).
 
 </details>
 

@@ -86,11 +86,27 @@ test:
 # Deploy the prebuilt static site/ to Vercel as a plain static site.
 # We deploy site/ (not the repo root) so Vercel does NOT see package.json and
 # try to build it as a Node/Playwright app — it just hosts the static files.
-# Requires `vercel login` once. This site contains real PII, so enable
-# protection in the Vercel dashboard (Settings > Deployment Protection):
-# Vercel Authentication on Hobby (free, owner-only), Password Protection on Pro.
+# Requires `vercel login` once.
+#
+# WARNING — verified the hard way: on Vercel's free (Hobby) plan the production
+# domain <project>.vercel.app CANNOT be protected (Vercel Authentication covers
+# it only on paid plans), and Vercel points that domain at the FIRST deployment
+# of a new project even without --prod. If your captured screens contain real
+# user data, a Hobby deploy makes it PUBLIC. Either use a paid plan with
+# Password Protection, redact PII screens first, or host privately instead
+# (e.g. `make serve` behind a VPN/tailnet).
+#
+# This target therefore requires explicit acknowledgement:
+#     make deploy DEPLOY_PUBLIC=1
 deploy: build
+ifndef DEPLOY_PUBLIC
+	@echo "Refusing to deploy: the production URL will be PUBLIC on Vercel's free plan."
+	@echo "Read the WARNING above this target in the Makefile, then re-run:"
+	@echo "    make deploy DEPLOY_PUBLIC=1"
+	@exit 1
+else
 	cd site && vercel deploy --prod
+endif
 
 # Full run: screens -> drafts -> API reference -> preview.
 # (Requires `make tunnel` open in another terminal.)
