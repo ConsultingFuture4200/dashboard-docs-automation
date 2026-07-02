@@ -65,8 +65,8 @@ concrete, and self-contained.
 Screen name: {name}
 Seed note: {note}
 
-Visible controls, given as "label" (role). Use only the quoted label text when \
-referring to a control; the role is context, not part of the name:
+Visible controls, given as "label (role)". Use only the label text when referring \
+to a control; the role in parentheses is context, not part of the name:
 {controls}
 
 Visible page text:
@@ -87,8 +87,9 @@ host, or port; users navigate by clicking, not by typing an address.
 ## Key elements
 A markdown table with columns | Element | What it does |. One row per important \
 button, field, tab, or control. In the Element column put ONLY the control's \
-visible label text (the words a user sees) — never a role prefix like "button:" \
-or "link:".
+visible label text (the exact words a user sees) — no surrounding quotation marks, \
+no brackets, and no role word. For example, write the row exactly like:
+| Restart Gateway | Restarts the gateway service. |
 
 ## Common tasks
 Numbered step-by-step instructions for the 2-4 most common things a user does here.
@@ -105,14 +106,14 @@ Rules:
 
 
 def format_control(c: str) -> str:
-    """Present a captured control as its visible label with the role as a
-    parenthetical, e.g. 'button: Restart Gateway' -> '"Restart Gateway" (button)'.
-    Keeps role context for the model without the 'role:' prefix that leaked into
-    the docs verbatim."""
+    """Present a captured control as its bare visible label with the role as a
+    parenthetical, e.g. 'button: Restart Gateway' -> 'Restart Gateway (button)'.
+    No surrounding quotes: the model copies label decoration verbatim, so keep the
+    label undecorated to avoid leaking quotes/prefixes into the docs."""
     if ":" in c:
         role, label = c.split(":", 1)
-        return f'"{label.strip()}" ({role.strip()})'
-    return f'"{c.strip()}"'
+        return f"{label.strip()} ({role.strip()})"
+    return c.strip()
 
 
 def build_messages(meta: dict, img_b64: str | None):

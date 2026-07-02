@@ -57,7 +57,9 @@ const ROLE = { a: "link", link: "link", button: "button", tab: "tab",
 const TRAIL = /\s+(links?|buttons?|fields?|tabs?|icons?|menus?|selects?|dropdowns?|toggles?|modules?|sections?|panels?|areas?|options?)$/i;
 
 async function present(page, label) {
-  const md = label.replace(/`|\*\*/g, "");
+  // Strip markdown emphasis/code and any surrounding quotation marks the draft
+  // may have wrapped around the label.
+  const md = label.replace(/`|\*\*/g, "").replace(/^["'“”']+|["'“”']+$/g, "").trim();
   const prefix = md.match(/^\s*(a|link|button|input|select|textarea|tab|menuitem|div|span|img)\s*:\s*(.+)$/i);
   let name = (prefix ? prefix[2] : md).trim().replace(TRAIL, "").trim();
   const shortName = name.split(/\s+/).slice(0, 3).join(" ");
