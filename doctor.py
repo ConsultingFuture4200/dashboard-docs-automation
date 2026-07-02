@@ -95,6 +95,8 @@ def main():
         fail("screens.yaml not found. Run: cp screens.example.yaml screens.yaml   # then list your screens")
     elif screens.read_bytes() == (ROOT / "screens.example.yaml").read_bytes():
         fail("screens.yaml is an unedited copy of screens.example.yaml — list your real screens.")
+    elif not any(line.split("#", 1)[0].strip() for line in screens.read_text().splitlines()):
+        fail("screens.yaml has no screens (empty or all commented out) — add at least one entry (see screens.example.yaml).")
     else:
         ok("screens.yaml present")
 

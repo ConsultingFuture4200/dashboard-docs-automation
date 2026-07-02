@@ -19,7 +19,16 @@ import { loadConfig } from "./config-check.js";
 
 const root = new URL("./", import.meta.url);
 const cfg = loadConfig(root);
-const screens = parse(readFileSync(new URL("screens.yaml", root), "utf8"));
+const screensPath = new URL("screens.yaml", root);
+if (!existsSync(screensPath)) {
+  console.error("\n  ✗ screens.yaml not found. Run: cp screens.example.yaml screens.yaml   # then list your screens\n");
+  process.exit(1);
+}
+const screens = parse(readFileSync(screensPath, "utf8"));
+if (!Array.isArray(screens) || screens.length === 0) {
+  console.error("\n  ✗ screens.yaml has no screens (empty or all commented out) — add at least one entry (see screens.example.yaml).\n");
+  process.exit(1);
+}
 
 // Auth is optional. With `auth: true` we require a saved session from `npm run
 // auth`. With `auth: false` (app is open or serves its own token), capture without one.
@@ -153,12 +162,15 @@ for (const s of todo) {
     for (const step of s.steps) await runStep(page, step);
     await page.waitForTimeout(cfg.settleMs);
 
-    // Detect being bounced to a login page (expired session): the URL smells
-    // like auth, or the page rendered essentially nothing. Fail this capture
-    // loudly instead of silently saving a login-page screenshot.
+    // Detect being bounced to a login page (expired session): a whole path
+    // segment IS a login route, or the page rendered essentially nothing. Match
+    // exact segments only, so legit screens like /settings/authentication or
+    // /oauth-clients (or a baseUrl host containing "auth") aren't rejected.
     const landed = page.url();
     const bodyChars = await page.evaluate(() => (document.body?.innerText || "").trim().length);
-    if (/login|signin|auth/i.test(landed)) {
+    const loginSegments = new Set(["login", "signin", "sign-in", "auth", "sso"]);
+    const landedPath = new URL(landed).pathname.toLowerCase();
+    if (landedPath.split("/").some((seg) => loginSegments.has(seg))) {
       throw new Error(`landed on ${landed} — session expired? Run: make auth, then: npm run capture -- ${s.id}`);
     }
     if (bodyChars < 30) {
@@ -205,4 +217,8 @@ for (const s of todo) {
 }
 
 await browser.close();
+if (ok < todo.length) {
+  console.error(`\n  Captured ${ok}/${todo.length} screens into capture/ — ${todo.length - ok} FAILED (see FAILED lines above).\n`);
+  process.exit(1);
+}
 console.log(`\n  Captured ${ok}/${todo.length} screens into capture/. Next: python draft.py\n`);
