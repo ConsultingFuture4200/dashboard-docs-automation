@@ -53,6 +53,13 @@ Flag only claims in the doc that are NOT supported by the ground truth: invented
 features, wrong descriptions of what a control does, incorrect navigation, or steps \
 that reference things not present. Do not flag reasonable phrasing differences.
 
+IMPORTANT: The ground truth includes the persistent app frame that appears on \
+EVERY screen — a left navigation sidebar (Home, Incoming Messages, Calendar, \
+Settings, Gateway Status, Restart Gateway) and a right-hand chat/terminal panel \
+with a conversation list. Ignore that frame. Judge the doc only against this \
+screen's MAIN CONTENT. Do not conclude the screen "is the dashboard" just because \
+the nav or chat panel is present — they are present everywhere.
+
 GROUND TRUTH — control labels:
 {controls}
 
